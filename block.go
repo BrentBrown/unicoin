@@ -8,9 +8,9 @@ import (
 )
 
 type Block struct {
+	timestamp    int64
 	nonce        int
 	previousHash [32]byte
-	timestamp    int64
 	transactions []*Transaction
 }
 
@@ -24,10 +24,7 @@ func NewBlock(nonce int, previousHash [32]byte, transactions []*Transaction) *Bl
 }
 
 func (b *Block) Hash() [32]byte {
-	m, err := b.MarshalJSON()
-	if err != nil {
-		println(err)
-	}
+	m, _ := b.MarshalJSON()
 	return sha256.Sum256(m)
 }
 
