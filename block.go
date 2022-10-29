@@ -1,28 +1,39 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"time"
 )
 
 type Block struct {
-	nonce        int
-	previousHash string
-	timestamp    int64
-	transactions []string
+	Nonce        int      `json:"nonce"`
+	PreviousHash [32]byte `json:"previousHash"`
+	Timestamp    int64    `json:"timestamp"`
+	Transactions []string `json:"transactions"`
 }
 
-func NewBlock(nonce int, previousHash string) *Block {
+func NewBlock(nonce int, previousHash [32]byte) *Block {
 	return &Block{
-		timestamp:    time.Now().UnixNano(),
-		nonce:        nonce,
-		previousHash: previousHash,
+		Timestamp:    time.Now().UnixNano(),
+		Nonce:        nonce,
+		PreviousHash: previousHash,
 	}
 }
 
+func (b *Block) Hash() [32]byte {
+	m, _ := b.marshalJSON()
+	return sha256.Sum256(m)
+}
+
+func (b *Block) marshalJSON() ([]byte, error) {
+	return json.Marshal(b)
+}
+
 func (b *Block) Print() {
-	fmt.Printf("timestamp       %d\n", b.timestamp)
-	fmt.Printf("nonce           %d\n", b.nonce)
-	fmt.Printf("previous_hash   %s\n", b.previousHash)
-	fmt.Printf("transactions    %s\n", b.transactions)
+	fmt.Printf("Timestamp       %d\n", b.Timestamp)
+	fmt.Printf("Nonce           %d\n", b.Nonce)
+	fmt.Printf("previous_hash   %x\n", b.PreviousHash)
+	fmt.Printf("Transactions    %s\n", b.Transactions)
 }
