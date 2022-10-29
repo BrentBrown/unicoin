@@ -2,32 +2,30 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"strings"
 )
 
-func main() {
-	b := NewBlock(0, "init hash")
-	b.Print()
+type Blockchain struct {
+	transactionPool []string
+	chain           []*Block
 }
 
-type Block struct {
-	nonce        int
-	previousHash string
-	timestamp    int64
-	transactions []string
+func NewBlockchain() *Blockchain {
+	bc := new(Blockchain)
+	bc.CreateBlock(0, "Init hash")
+	return bc
 }
 
-func NewBlock(nonce int, previousHash string) *Block {
-	return &Block{
-		timestamp:    time.Now().UnixNano(),
-		nonce:        nonce,
-		previousHash: previousHash,
+func (bc *Blockchain) CreateBlock(nonce int, previousHash string) *Block {
+	b := NewBlock(nonce, previousHash)
+	bc.chain = append(bc.chain, b)
+	return b
+}
+
+func (bc *Blockchain) Print() {
+	for i, b := range bc.chain {
+		fmt.Printf("%s Chain %d %s\n", strings.Repeat("=", 25), i, strings.Repeat("=", 25))
+		b.Print()
 	}
-}
-
-func (b *Block) Print() {
-	fmt.Printf("timestamp       %d\n", b.timestamp)
-	fmt.Printf("nonce           %d\n", b.nonce)
-	fmt.Printf("previous_hash   %s\n", b.previousHash)
-	fmt.Printf("transactions    %s\n", b.transactions)
+	fmt.Printf("%s\n", strings.Repeat("*", 25))
 }
