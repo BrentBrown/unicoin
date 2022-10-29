@@ -1,0 +1,1 @@
+🦄coin. An blockchain experiment.
