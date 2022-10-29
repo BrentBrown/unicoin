@@ -1,1 +1,1 @@
-🦄coin. A blockchain experiment.
+🦄coin. A blockchain adventure.

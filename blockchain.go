@@ -2,19 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
-const MINING_DIFFICULTY = 3
+const (
+	MiningDifficulty = 3
+	MiningSender     = "The Blockchain"
+	MiningReward     = 1.0
+)
 
 type Blockchain struct {
 	transactionPool []*Transaction
 	chain           []*Block
+	address         string
 }
 
-func NewBlockchain() *Blockchain {
+func NewBlockchain(address string) *Blockchain {
 	b := &Block{}
 	bc := new(Blockchain)
+	bc.address = address
 	bc.CreateBlock(0, b.Hash())
 	return bc
 }
@@ -51,10 +58,34 @@ func (bc *Blockchain) ProofOfWork() int {
 	transactions := bc.CopyTransactions()
 	previousHash := bc.LastBlock().Hash()
 	nonce := 0
-	for !bc.ValidProof(nonce, previousHash, transactions, MINING_DIFFICULTY) {
+	for !bc.ValidProof(nonce, previousHash, transactions, MiningDifficulty) {
 		nonce++
 	}
 	return nonce
+}
+
+func (bc *Blockchain) Mining() bool {
+	bc.AddTransaction(MiningSender, bc.address, MiningReward)
+	nonce := bc.ProofOfWork()
+	previousHash := bc.LastBlock().Hash()
+	bc.CreateBlock(nonce, previousHash)
+	log.Println("action=mining, status=success")
+	return true
+}
+
+func (bc *Blockchain) CalculateTotalAmount(address string) float32 {
+	var totalAmount float32
+	for _, b := range bc.chain {
+		for _, t := range b.transactions {
+			if address == t.recipient {
+				totalAmount += t.value
+			}
+			if address == t.sender {
+				totalAmount -= t.value
+			}
+		}
+	}
+	return totalAmount
 }
 
 func (bc *Blockchain) LastBlock() *Block {
