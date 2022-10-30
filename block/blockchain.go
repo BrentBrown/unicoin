@@ -1,4 +1,4 @@
-package main
+package block
 
 import (
 	"fmt"
@@ -18,13 +18,13 @@ type Blockchain struct {
 	address         string
 }
 
-func NewBlockchain(address string) *Blockchain {
-	b := &Block{}
-	bc := new(Blockchain)
-	bc.address = address
-	bc.CreateBlock(0, b.Hash())
-	return bc
-}
+//func NewBlockchain(address string) *Blockchain {
+//	b := &Block{}
+//	bc := new(Blockchain)
+//	bc.address = address
+//	bc.CreateBlock(0, b.Hash())
+//	return bc
+//}
 
 func (bc *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Block {
 	b := NewBlock(nonce, previousHash, bc.transactionPool)
