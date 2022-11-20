@@ -1,9 +1,13 @@
 package block
 
 import (
+	"crypto/ecdsa"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
+	"unicoin/transaction"
 )
 
 const (
@@ -18,13 +22,13 @@ type Blockchain struct {
 	address         string
 }
 
-//func NewBlockchain(address string) *Blockchain {
-//	b := &Block{}
-//	bc := new(Blockchain)
-//	bc.address = address
-//	bc.CreateBlock(0, b.Hash())
-//	return bc
-//}
+func NewBlockchain(blockchainAddress string) *Blockchain {
+	b := &Block{}
+	bc := new(Blockchain)
+	bc.address = blockchainAddress
+	bc.CreateBlock(0, b.Hash())
+	return bc
+}
 
 func (bc *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Block {
 	b := NewBlock(nonce, previousHash, bc.transactionPool)
@@ -33,9 +37,25 @@ func (bc *Blockchain) CreateBlock(nonce int, previousHash [32]byte) *Block {
 	return b
 }
 
-func (bc *Blockchain) AddTransaction(sender string, recipient string, value float32) {
+func (bc *Blockchain) AddTransaction(sender string, recipient string, value float32, senderPublicKey *ecdsa.PublicKey, s *transaction.Signature) bool {
 	t := NewTransaction(sender, recipient, value)
-	bc.transactionPool = append(bc.transactionPool, t)
+
+	if sender == MiningSender {
+		bc.transactionPool = append(bc.transactionPool, t)
+		return true
+	}
+
+	if bc.VerifyTransactionSignature(senderPublicKey, s, t) {
+		//if bc.CalculateTotalAmount(sender) < value {
+		//	log.Println("ERROR: Not enough balance in a wallet")
+		//	return false
+		//}
+		bc.transactionPool = append(bc.transactionPool, t)
+		return true
+	} else {
+		log.Println("ERROR: Verify Transaction")
+	}
+	return false
 }
 
 func (bc *Blockchain) CopyTransactions() []*Transaction {
@@ -44,6 +64,12 @@ func (bc *Blockchain) CopyTransactions() []*Transaction {
 		transactions = append(transactions, NewTransaction(t.sender, t.recipient, t.value))
 	}
 	return transactions
+}
+
+func (bc *Blockchain) VerifyTransactionSignature(senderPublicKey *ecdsa.PublicKey, s *transaction.Signature, t *Transaction) bool {
+	m, _ := json.Marshal(t)
+	h := sha256.Sum256([]byte(m))
+	return ecdsa.Verify(senderPublicKey, h[:], s.R, s.S)
 }
 
 func (bc *Blockchain) ValidProof(nonce int, previousHash [32]byte, transactions []*Transaction, difficulty int) bool {
@@ -65,7 +91,7 @@ func (bc *Blockchain) ProofOfWork() int {
 }
 
 func (bc *Blockchain) Mining() bool {
-	bc.AddTransaction(MiningSender, bc.address, MiningReward)
+	bc.AddTransaction(MiningSender, bc.address, MiningReward, nil, nil)
 	nonce := bc.ProofOfWork()
 	previousHash := bc.LastBlock().Hash()
 	bc.CreateBlock(nonce, previousHash)
